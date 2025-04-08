@@ -16,8 +16,8 @@ process index_fasta {
     def base_name = fasta.getBaseName()
 
     """
-    mkdir -p ${base_name}
-    bowtie2-build ${file_name} ${base_name}/${base_name}
-    mv ${base_name}/*.bt2 ${base_name}/
+    mkdir -p ${base_name}_index
+    bowtie2-build ${file_name} ${base_name}_index/${base_name}
+    mv ${base_name}/*.bt2 ${base_name}_index/
     """
 }
