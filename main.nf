@@ -19,6 +19,14 @@ workflow {
         .set { fasta_files }
     // Index fasta files
     index_fasta(fasta_files)
+    
+    // Get reads files
+    Channel
+    .fromFilePairs("${params.reads_dir}*_S*_R{1,2}_filtered.{fq,fastq,fq.gz,fastq.gz}", flat: true)
+    .set { reads }
+    // Align reads
+    paired_end_alignment(reads)
+
 }
 
 //-----------------------------------------------------------------------//
