@@ -3,20 +3,18 @@ nextflow.enable.dsl=2
 
 process index_fasta {
 
-    tag "$fasta.getBaseName()"
-
     input:
     path fasta
 
     output:
-    path "${params.intermediates_dir}/${fasta.getBaseName()}_index/"
+    path "${fasta.simpleName}_index", emit: index_dir
 
     script:
     def file_name = fasta.getName()
-    def base_name = fasta.getBaseName()
+    def base_name = file_name.replaceAll(/\.fa(sta)?$/, "")
 
     """
-    mkdir -p ${params.intermediates_dir}/${base_name}_index
-    bowtie2-build ${file_name} ${params.intermediates_dir}/${base_name}_index/${base_name}
+    mkdir -p ${base_name}_index
+    bowtie2-build ${file_name} ${base_name}_index/${base_name}
     """
 }
