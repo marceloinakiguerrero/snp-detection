@@ -7,6 +7,7 @@ process index_fasta {
     path fasta
 
     output:
+
     path "${fasta.simpleName}_index", emit: index_dir
 
     script:

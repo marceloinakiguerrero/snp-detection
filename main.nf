@@ -22,8 +22,11 @@ workflow {
     
     // Get reads files
     Channel
-    .fromFilePairs("${params.reads_dir}*_S*_R{1,2}_filtered.{fq,fastq,fq.gz,fastq.gz}", flat: true)
-    .set { reads }
+        .fromFilePairs("${params.reads_dir}*_S*_R{1,2}_filtered.{fq,fastq,fq.gz,fastq.gz}", flat: true)
+        .set { reads }
+        .combine(index_fasta.index_dir)
+        .set { paired_inputs }
+
     // Align reads
     paired_end_alignment(reads)
 
