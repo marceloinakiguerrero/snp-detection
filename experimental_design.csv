@@ -1,0 +1,2 @@
+sample_id, reference_genome, read_1, read_2
+lambda_virus, fasta_files/lambda_virus.fa, reads_files/reads_1.fq, reads_files/reads_2.fq
