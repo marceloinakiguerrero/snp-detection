@@ -4,18 +4,14 @@ nextflow.enable.dsl=2
 process index_fasta {
 
     input:
-    path fasta
+    tuple val(sample_id), file(path_reference_genome)
 
     output:
-
-    path "${fasta.simpleName}_index", emit: index_dir
+    path "${sample_id}_fasta_index"
 
     script:
-    def file_name = fasta.getName()
-    def base_name = file_name.replaceAll(/\.fa(sta)?$/, "")
-
     """
-    mkdir -p ${base_name}_index
-    bowtie2-build ${file_name} ${base_name}_index/${base_name}
+    mkdir -p ${sample_id}_fasta_index
+    bowtie2-build ${path_reference_genome} ${sample_id}_fasta_index/${sample_id}
     """
 }

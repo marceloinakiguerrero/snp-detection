@@ -1,2 +1,2 @@
-sample_id, reference_genome, read_1, read_2
-lambda_virus, fasta_files/lambda_virus.fa, reads_files/reads_1.fq, reads_files/reads_2.fq
+sample_id,path_reference_genome,path_reads_file_R1,path_reads_file_R2
+lambda_virus,fasta_files/lambda_virus.fa,reads_files/reads_1.fq,reads_files/reads_2.fq

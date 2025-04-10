@@ -6,29 +6,64 @@ nextflow.enable.dsl=2
 
 //-Modules---------------------------------------------------------------//
 include { index_fasta } from './modules/index_fasta.nf'
+include { align_reads } from './modules/align_reads.nf'
 //-----------------------------------------------------------------------//
 
 //-Workflow--------------------------------------------------------------//
 
 workflow {
-    // Get fasta files
+    // Get experimental data
     Channel
-        .fromPath("${params.fasta_dir}/*.fa")
-        .ifEmpty { error "No .fa format fasta files found in fasta_files" }
-        .view { file -> "Found input file: ${file}" }
+        .fromPath("experimental_design.csv")
+        .splitCsv(header: true, sep: ",")
+        .map { row ->
+            tuple(
+                row.sample_id,
+                row.path_reference_genome,
+                row.path_reads_file_R1,
+                row.path_reads_file_R2
+            )
+        }
+        .map { sample_id,
+            path_reference_genome,
+            path_reads_file_R1,
+            path_reads_file_R2 ->
+                tuple(sample_id,
+                file(path_reference_genome),
+                file(path_reads_file_R1),
+                file(path_reads_file_R2)) }
+        .set { experimental_data }
+    
+    //
+experimental_data
+        .map { sample_id,
+            path_reference_genome,
+            path_reads_file_R1,
+            path_reads_file_R2 ->
+                tuple(sample_id,
+                path_reference_genome) }
         .set { fasta_files }
+    
     // Index fasta files
     index_fasta(fasta_files)
-    
-    // Get reads files
-    Channel
-        .fromFilePairs("${params.reads_dir}*_S*_R{1,2}_filtered.{fq,fastq,fq.gz,fastq.gz}", flat: true)
-        .set { reads }
-        .combine(index_fasta.index_dir)
-        .set { paired_inputs }
+    .set {indexed_fasta}
 
+    // Combine all indexed fasta and experimental_data tuple
+experimental_data
+        .map { sample_id,
+            path_reference_genome,
+            path_reads_file_R1,
+            path_reads_file_R2 ->
+                tuple(sample_id,
+                path_reads_file_R1,
+                path_reads_file_R2) }
+        .combine(indexed_fasta)
+        .view()
+        .set {experimental_data_indexed}
+
+    // Subset experimental_indexed 
     // Align reads
-    paired_end_alignment(reads)
+align_reads(experimental_data_indexed).view()
 
 }
 
