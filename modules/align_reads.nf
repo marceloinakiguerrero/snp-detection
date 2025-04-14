@@ -6,7 +6,7 @@ process align_reads {
     tuple val(sample_id), file(path_reads_file_R1), file(path_reads_file_R2), file(indexed_fasta)
 
     output:
-    file "${sample_id}_sam/${sample_id}.sam"
+    tuple val(sample_id), path("${sample_id}_sam/${sample_id}.sam"), emit: sam_file
 
     script:
 

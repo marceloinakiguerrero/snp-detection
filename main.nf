@@ -7,12 +7,18 @@ nextflow.enable.dsl=2
 //-Modules---------------------------------------------------------------//
 include { index_fasta } from './modules/index_fasta.nf'
 include { align_reads } from './modules/align_reads.nf'
+include { sam_to_bam } from './modules/sam_to_bam.nf'
+include { bam_sort } from './modules/bam_sort.nf'
+include { variant_call } from './modules/variant_call.nf'
 //-----------------------------------------------------------------------//
 
 //-Workflow--------------------------------------------------------------//
 
 workflow {
-    // Get experimental data
+
+
+//-----------------------------------------------------------------//
+// Channel: Set Experimental Data Channel
     Channel
         .fromPath("experimental_design.csv")
         .splitCsv(header: true, sep: ",")
@@ -32,24 +38,29 @@ workflow {
                 file(path_reference_genome),
                 file(path_reads_file_R1),
                 file(path_reads_file_R2)) }
-        .set { experimental_data }
-    
-    //
-experimental_data
+        .set { experimental_data_channel }
+//-----------------------------------------------------------------//
+
+
+//-----------------------------------------------------------------//
+// Channel: Set Fasta channel
+experimental_data_channel
         .map { sample_id,
             path_reference_genome,
             path_reads_file_R1,
             path_reads_file_R2 ->
                 tuple(sample_id,
                 path_reference_genome) }
-        .set { fasta_files }
-    
-    // Index fasta files
-    index_fasta(fasta_files)
+        .set { fasta_channel }  
+// Process: Index fasta files
+    index_fasta(fasta_channel)
     .set {indexed_fasta}
+//-----------------------------------------------------------------//
 
-    // Combine all indexed fasta and experimental_data tuple
-experimental_data
+
+//-----------------------------------------------------------------//
+// Channel: Set index_channel
+experimental_data_channel
         .map { sample_id,
             path_reference_genome,
             path_reads_file_R1,
@@ -58,13 +69,50 @@ experimental_data
                 path_reads_file_R1,
                 path_reads_file_R2) }
         .combine(indexed_fasta)
-        .view()
-        .set {experimental_data_indexed}
+        .set {index_channel}
+// Process: Align reads
+align_reads(index_channel)
+    .set { aligned_sam }
+//-----------------------------------------------------------------//
 
-    // Subset experimental_indexed 
-    // Align reads
-align_reads(experimental_data_indexed).view()
 
+//-----------------------------------------------------------------//
+//Process: Convert sam to bam
+sam_to_bam (aligned_sam.sam_file)
+    .set { aligned_bam }
+//-----------------------------------------------------------------//
+
+
+//-----------------------------------------------------------------//
+    // Combine sample_id to aligned bam tuple
+//experimental_data_channel
+//        .map { sample_id,
+//            path_reference_genome,
+//            path_reads_file_R1,
+//            path_reads_file_R2 ->
+//                tuple(sample_id,
+//                aligned_bam) }
+//        .set { aligned_bam_channel }
+//
+    // Convert bam to sorted bam
+bam_sort (aligned_bam.bam_file)
+    .set { sorted_bam }
+//-----------------------------------------------------------------//
+
+
+//-----------------------------------------------------------------//
+    // Combine sample_id to sorted bam tuple
+//experimental_data_channel
+//        .map { sample_id,
+//            path_reference_genome,
+//            path_reads_file_R1,
+//            path_reads_file_R2 ->
+//                tuple(sample_id,
+//                path_reference_genome,
+//                sorted_bam) }
+//        .set { sorted_bam }
+    // Call variants
+//variant_call (sorted_bam)
+//    .set { variant_call }
+//-----------------------------------------------------------------//
 }
-
-//-----------------------------------------------------------------------//
