@@ -84,16 +84,6 @@ sam_to_bam (aligned_sam.sam_file)
 
 
 //-----------------------------------------------------------------//
-    // Combine sample_id to aligned bam tuple
-//experimental_data_channel
-//        .map { sample_id,
-//            path_reference_genome,
-//            path_reads_file_R1,
-//            path_reads_file_R2 ->
-//                tuple(sample_id,
-//                aligned_bam) }
-//        .set { aligned_bam_channel }
-//
     // Convert bam to sorted bam
 bam_sort (aligned_bam.bam_file)
     .set { sorted_bam }
@@ -102,17 +92,12 @@ bam_sort (aligned_bam.bam_file)
 
 //-----------------------------------------------------------------//
     // Combine sample_id to sorted bam tuple
-//experimental_data_channel
-//        .map { sample_id,
-//            path_reference_genome,
-//            path_reads_file_R1,
-//            path_reads_file_R2 ->
-//                tuple(sample_id,
-//                path_reference_genome,
-//                sorted_bam) }
-//        .set { sorted_bam }
+fasta_channel
+    .combine(sorted_bam)
+    .view()
+    .set { variant_call_channel }
     // Call variants
-//variant_call (sorted_bam)
-//    .set { variant_call }
+variant_call (variant_call_channel)
+    .set { variant_call }
 //-----------------------------------------------------------------//
 }

@@ -7,7 +7,7 @@ process bam_sort {
     tuple val(sample_id), file(aligned_bam)
 
     output:
-    tuple val (sample_id), path("${sample_id}_bam/${sample_id}.sorted.bam"), emit: sorted_bam
+    path("${sample_id}_bam/${sample_id}.sorted.bam"), emit: sorted_bam
 
     script:
     """
